@@ -6,8 +6,9 @@ import tempfile
 
 from ray import tune
 from ray.tune.schedulers import ASHAScheduler
+from ray.tune.search.basic_variant import BasicVariantGenerator
 
-from .simulation import InventoryConfig, evaluate_policy
+from .simulation import evaluate_policy
 
 RUNG_SEEDS = (
     (101,),
@@ -37,8 +38,6 @@ def policy_trainable(config: dict[str, int]) -> None:
 def build_scheduler() -> ASHAScheduler:
     return ASHAScheduler(
         time_attr="training_iteration",
-        metric="cost",
-        mode="min",
         max_t=len(RUNG_SEEDS),
         grace_period=1,
         reduction_factor=2,
@@ -65,6 +64,7 @@ def run_tune_search(
             metric="cost",
             mode="min",
             scheduler=build_scheduler(),
+            search_alg=BasicVariantGenerator(random_state=seed),
             num_samples=num_samples,
             max_concurrent_trials=2,
         ),
